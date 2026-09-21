@@ -39,7 +39,10 @@ echo [CHECK] Runtime imports...
 ".venv\Scripts\python.exe" -c "import livepaper.config, livepaper.store, livepaper.priceblend, livepaper.trading; print('Runtime imports OK')" || goto :fail
 
 echo [CHECK] Kalshi authentication and account read only...
-".venv\Scripts\python.exe" -c "from livepaper.trading.broker import KalshiBroker; b=KalshiBroker(); print('Kalshi auth OK; balance $%.2f' %% b.balance_dollars())" || goto :fail
+".venv\Scripts\python.exe" -c "from livepaper.trading.broker import LiveBroker; b=LiveBroker(); print('Kalshi auth OK; balance $%.2f' %% b.balance_dollars()); print('Resting orders:', len(b.resting_orders())); print('Positions:', len(b.positions()))" || goto :fail
+
+echo [CHECK] BTC 15-minute market discovery...
+".venv\Scripts\python.exe" -c "from backtest.kalshi_client import Kalshi; from livepaper.trading.discovery import Discovery; a=Discovery(Kalshi()).active('KXBTC15M'); print('Active KXBTC15M markets:', len(a)); assert a, 'No active KXBTC15M markets discovered'" || goto :fail
 
 echo.
 echo [PASS] PREFLIGHT COMPLETE. NO ORDER WAS PLACED.
