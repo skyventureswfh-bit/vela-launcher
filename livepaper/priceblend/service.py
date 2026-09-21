@@ -17,6 +17,7 @@ Under §6.A this becomes PriceBlend's own narrow settlement reader.
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import Callable
+import time
 from .. import config as C
 from ..contract import RawAvgBundle, SettlementTruth
 
@@ -56,6 +57,10 @@ class PriceBlend:
         if latest is None:
             return None
         ts, raw_avg = latest
+        # Fail closed on a stale market-data stream. A disconnected websocket
+        # retains its last tick in memory, which must never be mistaken for live data.
+        if time.time() - ts > 5.0:
+            return None
         return RawAvgBundle(
             asset=asset, ts=ts, symbol=symbol, raw_avg=raw_avg, n_prices=1,
             delta=self.debias[asset].delta(),
