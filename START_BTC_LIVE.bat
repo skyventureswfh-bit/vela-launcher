@@ -5,9 +5,9 @@ title Vela Launcher - BTC 15M
 
 if not exist ".env" (
   echo.
-  echo [STOP] Missing .env
-  echo Copy .env.example to .env and add your Kalshi API credentials.
-  echo Real credentials stay ONLY on this computer.
+  echo [STOP] Missing local .env credentials file.
+  echo Create it from .env.example and add your Kalshi API key and PEM private key.
+  echo NEVER put the real key in GitHub or chat.
   echo.
   pause
   exit /b 1
@@ -38,11 +38,21 @@ set VELA_MAX_DAILY_LOSS=25
 set VELA_MAX_OPEN_NOTIONAL=25
 set VELA_MAX_OPEN_FRACTION=0.50
 
+if exist "livepaper\data_btc\KILL" (
+  echo.
+  echo [STOP] Kill switch is armed.
+  echo Run RESET_KILL.bat only when you intentionally want to re-arm trading.
+  echo.
+  pause
+  exit /b 1
+)
+
 echo.
 echo ==========================================
-echo  VELA LAUNCHER - BTC 15 MINUTE - REAL MONEY
-echo  Daily loss halt: $25
-echo  Kill switch: livepaper\data_btc\KILL
+echo  VELA - BTC 15 MINUTE - REAL MONEY
+echo  Daily-loss halt: $25
+echo  Strong taker: ON
+echo  Supabase: OFF
 echo ==========================================
 echo.
 ".venv\Scripts\python.exe" -m livepaper
