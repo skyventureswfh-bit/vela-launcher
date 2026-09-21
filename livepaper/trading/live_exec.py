@@ -91,8 +91,17 @@ class LiveExecutor:
         self.log(f"[live] *** HALTED: {why} *** cancelling all orders")
         try:
             self.b.cancel_all()
-        except Exception:
-            pass
+        except Exception as e:
+            self.store.event("live_cancel_all_err", str(e)[:200])
+            self.log(f"[live] WARNING: cancel-all could not be confirmed: {e}")
+        # Persist the halt across restarts. The launcher refuses to start while
+        # this file exists; RESET_KILL.bat is the deliberate re-arm action.
+        try:
+            self.kill_path.parent.mkdir(parents=True, exist_ok=True)
+            self.kill_path.write_text(f"{why}\n", encoding="utf-8")
+        except Exception as e:
+            self.store.event("live_kill_persist_err", str(e)[:200])
+            self.log(f"[live] WARNING: could not persist KILL file: {e}")
 
     def _open_notional(self) -> float:
         """Combined open exposure across BOTH pathways (shared cap)."""
