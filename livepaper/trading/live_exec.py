@@ -63,8 +63,14 @@ class LiveExecutor:
                      f"risk_balance=${self.balance:.2f} "
                      f"(demo={C.LIVE_DEMO}, size={C.PORTFOLIO_FRACTION:.0%}/trade)")
         except Exception as e:
-            self.log(f"[live] startup reconcile error: {e}")
+            self.log(f"[live] startup reconcile FATAL: {e}")
             self.store.event("live_startup_err", str(e)[:200])
+            self.halted = True
+            try:
+                self.b.cancel_all()
+            except Exception:
+                pass
+            raise RuntimeError(f"Live startup reconciliation failed; refusing to trade: {e}") from e
 
     def shutdown(self) -> None:
         try:
