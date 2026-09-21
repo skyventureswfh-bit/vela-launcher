@@ -151,6 +151,9 @@ class LiveExecutor:
             self.store.event("strong_order_err", f"{s.ticker} take: {e}")
             return
         oid = o.get("order_id")
+        if not oid:
+            self._halt(f"taker order returned no order_id for {s.ticker}")
+            return
         self.strong_orders[s.ticker] = {"coid": coid, "oid": oid, "side": side,
                                         "price": px, "count": count, "filled": 0,
                                         "canceled": False, "done": False}
@@ -184,6 +187,9 @@ class LiveExecutor:
             self.store.event("live_order_err", f"{s.ticker} place: {e}")
             return
         oid = o.get("order_id")
+        if not oid:
+            self._halt(f"maker order returned no order_id for {s.ticker}")
+            return
         self.orders[s.ticker] = {"coid": coid, "oid": oid, "side": side, "price": px,
                                  "count": count, "filled": 0, "canceled": False,
                                  "done": False}
@@ -211,7 +217,8 @@ class LiveExecutor:
             fills = self.b.fills()
         except Exception as e:
             self.store.event("live_fill_poll_err", str(e)[:200])
-            fills = []
+            self._halt(f"cannot poll fills safely: {e}")
+            return
         for f in fills:
             # Kalshi fill fields: fill_id/trade_id, order_id, market_ticker/ticker,
             # count_fp (str), {yes,no}_price_dollars (str), fee_cost (str).
