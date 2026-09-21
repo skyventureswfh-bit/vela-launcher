@@ -203,6 +203,13 @@ class LiveExecutor:
             return
         if not self.orders and not self.strong_orders:
             return
+        # If the live account state cannot be read, do not keep managing/trading blind.
+        try:
+            self.real_balance = self.b.balance_dollars()
+        except Exception as e:
+            self.store.event("live_balance_poll_err", str(e)[:200])
+            self._halt(f"cannot read live balance safely: {e}")
+            return
         # route fills by order_id: both pathways may have an order on the SAME
         # ticker, so ticker alone is ambiguous. oid -> ("fade"|"strong", tk, rec).
         oid_map = {}
