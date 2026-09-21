@@ -280,8 +280,10 @@ class LiveExecutor:
                         and rec["filled"] < rec["count"]:
                     try:
                         self.b.cancel(rec["oid"])
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        self.store.event("live_cancel_err", f"{tk} {rec['oid']}: {e}")
+                        self._halt(f"cannot confirm near-close cancel for {tk}: {e}")
+                        return
                     rec["canceled"] = True
                     self.store.order(tk, "cancel", rec["coid"], rec["oid"], rec["side"],
                                      rec["price"], rec["count"] - rec["filled"], "canceled")
